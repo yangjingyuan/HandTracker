@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 2.8)
+project(HandTracker)
+find_package(OpenCV REQUIRED)
+add_executable(hand_tracker hand_tracker.cpp detector.h detector.cpp)
+target_link_libraries(hand_tracker ${OpenCV_LIBS} )
