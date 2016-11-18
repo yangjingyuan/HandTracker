@@ -81,10 +81,9 @@ int detector::check_blobs(cv::Mat frame){
     int channels = I.channels();
     int nRows = I.rows;
     int nCols = I.cols * channels;
-    
+
     //define binary image
     cv::Mat binary_image(nRows,I.cols,CV_8UC1, cv::Scalar::all(0));
-
     int i,j;
     uchar* p;
     for (i = 0; i < nRows; ++i){
@@ -100,9 +99,7 @@ int detector::check_blobs(cv::Mat frame){
             }
         }
     }
-
     this->_classify_frame = binary_image;    
-
     return ret;
 }
 
@@ -132,6 +129,14 @@ void detector::remove_faces(){
             }
         }
     }
+}
+
+cv::Scalar GetRandomColor()
+{
+    uchar r = 255 * (rand()/(1.0 + RAND_MAX));
+    uchar g = 255 * (rand()/(1.0 + RAND_MAX));
+    uchar b = 255 * (rand()/(1.0 + RAND_MAX));
+    return cv::Scalar(b,g,r) ;
 }
 
 void detector::two_pass_labeling(){
@@ -260,10 +265,7 @@ void detector::size_filtering(){
 }
 
 std::map<int, std::vector<cv::Point> > detector::detect(cv::Mat frame){
-    //cv::Mat gray_frame(frame.size(), CV_8UC1);
-
     cv::cvtColor(frame, _gray_frame, CV_BGR2GRAY);
-
     cv::equalizeHist(_gray_frame, _gray_frame);
     _face_detector.detectMultiScale(_gray_frame, _face_rects);
     check_blobs(frame);
@@ -275,27 +277,17 @@ std::map<int, std::vector<cv::Point> > detector::detect(cv::Mat frame){
     two_pass_labeling();
     size_filtering();
 
-    //return _classify_frame;
     return _hand_blobs;
-}
-
-//random color
-cv::Scalar GetRandomColor()
-{
-    uchar r = 255 * (rand()/(1.0 + RAND_MAX));
-    uchar g = 255 * (rand()/(1.0 + RAND_MAX));
-    uchar b = 255 * (rand()/(1.0 + RAND_MAX));
-    return cv::Scalar(b,g,r) ;
 }
 
 void detector::display(){
     cv::Mat bloberImage(_gray_frame.rows, _gray_frame.cols, CV_8UC3, cv::Scalar(0,0,0));
-    for (std::map<int, std::vector<cv::Point> >::iterator it=_hand_blobs.begin(); it!=_hand_blobs.end(); it++) {
+    for (std::map<int, std::vector<cv::Point> >::iterator it= _hand_blobs.begin(); it != _hand_blobs.end(); it++) {
         std::vector<cv::Point> drawPoints = it->second;
-        cv::Scalar blobcolor=GetRandomColor();
-        for (std::vector<cv::Point>::iterator it=drawPoints.begin(); it!=drawPoints.end(); it++) {
-            int x = it->x;
-            int y = it->y;
+        cv::Scalar blobcolor = GetRandomColor();
+        for (std::vector<cv::Point>::iterator it2 = drawPoints.begin(); it2 != drawPoints.end(); it2++) {
+            int x = it2->x;
+            int y = it2->y;
             bloberImage.at<cv::Vec3b>(y,x).val[0] = blobcolor.val[0];
             bloberImage.at<cv::Vec3b>(y,x).val[1] = blobcolor.val[1];
             bloberImage.at<cv::Vec3b>(y,x).val[2] = blobcolor.val[2];

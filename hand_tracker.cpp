@@ -9,7 +9,7 @@
 /**
  * @file hand_tracker.cpp
  * @author yangjingyuan
- * @email hlbryang@163.com
+ * @email hlbryang@gmail.com
  * @date 2016/11/02 14:16:35
  * @brief 
  *  
@@ -39,11 +39,9 @@ int test_hand_tracker(){
             //detector.display();
             tracker.track(hand_blobs);
             tracker.display(frame);
-
         }
-
+        
         stop = (char)cvWaitKey(50); // it wait n milionseconds until a keypress, if not return -1
-
         if (stop == 27){
             break;
         }

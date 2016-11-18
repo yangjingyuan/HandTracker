@@ -61,7 +61,6 @@ void two_pass_labeling();
 
 void size_filtering();
 
-//cv::Mat detect(cv::Mat frame);
 std::map<int, std::vector<cv::Point> > detect(cv::Mat frame);
 
 void display();
