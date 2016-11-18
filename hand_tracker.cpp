@@ -16,6 +16,7 @@
  **/
 
 #include "detector.h"
+#include "tracker.h"
 
 int test_hand_tracker(){
     cv::VideoCapture capture;
@@ -28,12 +29,17 @@ int test_hand_tracker(){
     detector.init_models("./models");
     char stop;
 
+    hand_tracker::tracker tracker;
+
     while (true) {
         capture >> frame;
         if (!frame.empty()){
             cv::resize(frame, frame, cv::Size(320,240), 0, 0);
-            cv::Mat det_ret = detector.detect(frame);
-            cv::imshow("REAL-TIME VIDEO", det_ret);
+            std::map<int, std::vector<cv::Point> > hand_blobs = detector.detect(frame);
+            //detector.display();
+            tracker.track(hand_blobs);
+            tracker.display(frame);
+
         }
 
         stop = (char)cvWaitKey(50); // it wait n milionseconds until a keypress, if not return -1

@@ -135,34 +135,35 @@ void detector::remove_faces(){
 }
 
 void detector::two_pass_labeling(){
-    /*
-// 1. first pass
+
+    _hand_blobs.clear();
     
-    _lableImg.release() ;
-    _binImg.convertTo(_lableImg, CV_32SC1) ;
+    cv::Mat label_frame;
+    // 1. first pass
+    _classify_frame.convertTo(label_frame, CV_32SC1) ;
     
     int label = 1 ;  // start by 2
-    std::vector<int> labelSet ;
-    labelSet.push_back(0) ;   // background: 0
-    labelSet.push_back(1) ;   // foreground: 1
+    std::vector<int> label_set;
+    label_set.push_back(0) ;   // background: 0
+    label_set.push_back(1) ;   // foreground: 1
     
-    int rows = _binImg.rows - 1 ;
-    int cols = _binImg.cols - 1 ;
+    int rows = _classify_frame.rows - 1 ;
+    int cols = _classify_frame.cols - 1 ;
     for (int i = 1; i < rows; i++)
     {
-        int* data_preRow = _lableImg.ptr<int>(i-1) ;
-        int* data_curRow = _lableImg.ptr<int>(i) ;
+        int* data_preRow = label_frame.ptr<int>(i-1) ;
+        int* data_curRow = label_frame.ptr<int>(i) ;
         for (int j = 1; j < cols; j++)
         {
             if (data_curRow[j] == 1)
             {
-                vector<int> neighborLabels ;
+                std::vector<int> neighborLabels ;
                 neighborLabels.reserve(2) ;
                 int leftPixel = data_curRow[j-1] ;
                 int upPixel = data_preRow[j] ;
                 
-                int leftUp = _lableImg.at<int>(i-1,j-1);
-                int rightUp = _lableImg.at<int>(i-1,j+1);
+                int leftUp = label_frame.at<int>(i-1,j-1);
+                int rightUp = label_frame.at<int>(i-1,j+1);
                 //8 connectively
                 if ( leftPixel > 1)
                 {
@@ -183,9 +184,9 @@ void detector::two_pass_labeling(){
                 
                 if (neighborLabels.empty())
                 {
-                    labelSet.push_back(++label) ;  // assign to a new label
+                    label_set.push_back(++label) ;  // assign to a new label
                     data_curRow[j] = label ;
-                    labelSet[label] = label ;
+                    label_set[label] = label ;
                 }
                 else
                 {
@@ -197,15 +198,15 @@ void detector::two_pass_labeling(){
                     for (size_t k = 1; k < neighborLabels.size(); k++)
                     {
                         int tempLabel = neighborLabels[k] ;
-                        int& oldSmallestLabel = labelSet[tempLabel] ;
+                        int& oldSmallestLabel = label_set[tempLabel] ;
                         if (oldSmallestLabel > smallestLabel)
                         {
-                            labelSet[oldSmallestLabel] = smallestLabel ;
+                            label_set[oldSmallestLabel] = smallestLabel ;
                             oldSmallestLabel = smallestLabel ;
                         }
                         else if (oldSmallestLabel < smallestLabel)
                         {
-                            labelSet[smallestLabel] = oldSmallestLabel ;
+                            label_set[smallestLabel] = oldSmallestLabel ;
                         }
                     }
                 }
@@ -215,44 +216,50 @@ void detector::two_pass_labeling(){
     
     // update equivalent labels
     // assigned with the smallest label in each equivalent label set
-    for (size_t i = 2; i < labelSet.size(); i++)
+    for (size_t i = 2; i < label_set.size(); i++)
     {
-        int curLabel = labelSet[i] ;
-        int preLabel = labelSet[curLabel] ;
+        int curLabel = label_set[i] ;
+        int preLabel = label_set[curLabel] ;
         while (preLabel != curLabel)
         {
             curLabel = preLabel ;
-            preLabel = labelSet[preLabel] ;
+            preLabel = label_set[preLabel] ;
         }
-        labelSet[i] = curLabel ;
+        label_set[i] = curLabel ;
     }
     
     
     // 2. second pass
     for (int i = 0; i < rows; i++)
     {
-        int* data = _lableImg.ptr<int>(i) ;
+        int* data = label_frame.ptr<int>(i) ;
         for (int j = 0; j < cols; j++)
         {
             int& pixelLabel = data[j] ;
             
-            pixelLabel = labelSet[pixelLabel] ;
-            //cout<<pixelLabel<<"\t";
+            pixelLabel = label_set[pixelLabel] ;
             //record blobs
             if (pixelLabel!=0) {
-                //blobRecorder[pixelLabel].push_back(make_pair(j+1,i+1));
-                blobRecorder[pixelLabel].push_back(Point(j+1,i+1));
-                //pointsMap[pixelLabel].push_back(Point(j+1,i+1));
+                _hand_blobs[pixelLabel].push_back(cv::Point(j+1,i+1));
             }
             
         }
-        //cout<<endl;
     }
-    return blobRecorder;
-    */
+    
 }
 
-cv::Mat detector::detect(cv::Mat frame){
+void detector::size_filtering(){
+    std::map<int, std::vector<cv::Point> > blob_container;
+    int index = 1;
+    for (std::map<int, std::vector<cv::Point> >::iterator it = _hand_blobs.begin(); it != _hand_blobs.end(); it++) {
+        if (it->second.size()>=500) {
+            blob_container[index++] = it->second;
+        }
+    }
+    _hand_blobs = blob_container;
+}
+
+std::map<int, std::vector<cv::Point> > detector::detect(cv::Mat frame){
     //cv::Mat gray_frame(frame.size(), CV_8UC1);
 
     cv::cvtColor(frame, _gray_frame, CV_BGR2GRAY);
@@ -265,10 +272,37 @@ cv::Mat detector::detect(cv::Mat frame){
     cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
     morphologyEx(_classify_frame, _classify_frame, CV_MOP_CLOSE, kernel);
 
-    return _classify_frame;
+    two_pass_labeling();
+    size_filtering();
+
+    //return _classify_frame;
+    return _hand_blobs;
 }
 
+//random color
+cv::Scalar GetRandomColor()
+{
+    uchar r = 255 * (rand()/(1.0 + RAND_MAX));
+    uchar g = 255 * (rand()/(1.0 + RAND_MAX));
+    uchar b = 255 * (rand()/(1.0 + RAND_MAX));
+    return cv::Scalar(b,g,r) ;
+}
 
+void detector::display(){
+    cv::Mat bloberImage(_gray_frame.rows, _gray_frame.cols, CV_8UC3, cv::Scalar(0,0,0));
+    for (std::map<int, std::vector<cv::Point> >::iterator it=_hand_blobs.begin(); it!=_hand_blobs.end(); it++) {
+        std::vector<cv::Point> drawPoints = it->second;
+        cv::Scalar blobcolor=GetRandomColor();
+        for (std::vector<cv::Point>::iterator it=drawPoints.begin(); it!=drawPoints.end(); it++) {
+            int x = it->x;
+            int y = it->y;
+            bloberImage.at<cv::Vec3b>(y,x).val[0] = blobcolor.val[0];
+            bloberImage.at<cv::Vec3b>(y,x).val[1] = blobcolor.val[1];
+            bloberImage.at<cv::Vec3b>(y,x).val[2] = blobcolor.val[2];
+        }
+    }
+    cv::imshow("draw-blob", bloberImage);
+}
 
 int detector::load_model_file(std::string model_path,\
     std::map<UV, double>& classifier){

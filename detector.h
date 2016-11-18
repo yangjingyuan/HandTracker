@@ -59,7 +59,12 @@ void remove_faces();
 
 void two_pass_labeling();
 
-cv::Mat detect(cv::Mat frame);
+void size_filtering();
+
+//cv::Mat detect(cv::Mat frame);
+std::map<int, std::vector<cv::Point> > detect(cv::Mat frame);
+
+void display();
 
 private:
 int load_model_file(std::string model_path,\
@@ -83,9 +88,11 @@ cv::CascadeClassifier _face_detector;
 
 double _classifier_threshold;
 
+cv::Mat _gray_frame;
+
 cv::Mat _classify_frame;
 
-cv::Mat _gray_frame;
+cv::Mat _label_frame;
 
 std::map<int, std::vector<cv::Point> > _hand_blobs;
 
