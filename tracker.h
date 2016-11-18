@@ -66,8 +66,8 @@ public:
     std::map<int, hypothesis> getHandHypotheses(cv::Mat videoFrame, cv::Mat detFrame);
     std::map<int, hypothesis> obtainHandHypotheses(cv::Mat videoFrame, cv::Mat detFrame);
     void display(cv::Mat& draw_img);
-    int track_time = 1;
 private:
+    int track_time = 1;
     std::map<int, std::vector<cv::Point> > hypoGeneration(std::map<int, std::vector<cv::Point> > blobRecorder);
     void hypoTracking(std::map<int, std::vector<cv::Point> > blobRecorder);
     std::map<int,hypothesis> removeHypothesis(std::map<int, std::vector<cv::Point> > blobs);

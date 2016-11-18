@@ -131,11 +131,11 @@ void detector::remove_faces(){
     }
 }
 
-cv::Scalar GetRandomColor()
-{
+cv::Scalar GetRandomColor(){
     uchar r = 255 * (rand()/(1.0 + RAND_MAX));
     uchar g = 255 * (rand()/(1.0 + RAND_MAX));
     uchar b = 255 * (rand()/(1.0 + RAND_MAX));
+    //std::cout << "r\t" << (int)r << "g\t" << (int)g << "b\t" << (int)b << "\n";
     return cv::Scalar(b,g,r) ;
 }
 
@@ -250,7 +250,6 @@ void detector::two_pass_labeling(){
             
         }
     }
-    
 }
 
 void detector::size_filtering(){
@@ -293,7 +292,7 @@ void detector::display(){
             bloberImage.at<cv::Vec3b>(y,x).val[2] = blobcolor.val[2];
         }
     }
-    cv::imshow("draw-blob", bloberImage);
+    cv::imshow("detect-result", bloberImage);
 }
 
 int detector::load_model_file(std::string model_path,\

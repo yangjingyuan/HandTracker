@@ -107,9 +107,6 @@ void tracker::hypoPredition(){
     }
 }
 
-
-
-
 //detetmin hypothesis by every point in blob
 bool tracker::blob_has_hypothesis(std::vector<cv::Point> blob){
     bool inside = false;
@@ -369,6 +366,8 @@ void tracker::display(cv::Mat& draw_img){
         }else{
         }
     }
+
+    cv::imshow("track-result",draw_img);
 }
 
 
