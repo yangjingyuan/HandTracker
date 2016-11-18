@@ -36,7 +36,7 @@ int test_hand_tracker(){
         if (!frame.empty()){
             cv::resize(frame, frame, cv::Size(320,240), 0, 0);
             std::map<int, std::vector<cv::Point> > hand_blobs = detector.detect(frame);
-            //detector.display();
+            //detector.display(hand_blobs);
             tracker.track(hand_blobs);
             tracker.display(frame);
         }

@@ -57,13 +57,13 @@ int check_blobs(cv::Mat frame);
 
 void remove_faces();
 
-void two_pass_labeling();
+std::map<int, std::vector<cv::Point> > two_pass_labeling();
 
-void size_filtering();
+std::map<int, std::vector<cv::Point> > size_filtering(std::map<int, std::vector<cv::Point> > hand_blobs);
 
 std::map<int, std::vector<cv::Point> > detect(cv::Mat frame);
 
-void display();
+void display(std::map<int, std::vector<cv::Point> > hand_blobs);
 
 private:
 int load_model_file(std::string model_path,\
@@ -90,8 +90,6 @@ double _classifier_threshold;
 cv::Mat _gray_frame;
 
 cv::Mat _classify_frame;
-
-cv::Mat _label_frame;
 
 std::map<int, std::vector<cv::Point> > _hand_blobs;
 
